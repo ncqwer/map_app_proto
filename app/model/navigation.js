@@ -13,8 +13,8 @@ module.exports = function (begin,end,geoCoordMap) {
     var toCoord = geoCoordMap[end];
     if(fromCoord && toCoord){
         res.push({
-            fromName: begin,
-            toName: end,
+            // fromName: begin,
+            // toName: end,
             coords: [fromCoord,toCoord]
         });
     }
