@@ -1,287 +1,83 @@
-require('./vintage.js');
-var echarts = require('echarts');
+var parse_data = require('./parse_data.js');
 var $ = require('jquery');
-var navigation = require('./model/navigation.js');
-var mapRender = require('./view/map_render.js');
+var test_data = require('../data/loading_state.json');
+var echarts = require('echarts');
+var direction_data = require('../data/direction.json');
 
-//for data
-var geoCoordMap = {
-    '上海': [121.4648,31.2891],
-    '东莞': [113.8953,22.901],
-    '东营': [118.7073,37.5513],
-    '中山': [113.4229,22.478],
-    '临汾': [111.4783,36.1615],
-    '临沂': [118.3118,35.2936],
-    '丹东': [124.541,40.4242],
-    '丽水': [119.5642,28.1854],
-    '乌鲁木齐': [87.9236,43.5883],
-    '佛山': [112.8955,23.1097],
-    '保定': [115.0488,39.0948],
-    '兰州': [103.5901,36.3043],
-    '包头': [110.3467,41.4899],
-    '北京': [116.4551,40.2539],
-    '北海': [109.314,21.6211],
-    '南京': [118.8062,31.9208],
-    '南宁': [108.479,23.1152],
-    '南昌': [116.0046,28.6633],
-    '南通': [121.1023,32.1625],
-    '厦门': [118.1689,24.6478],
-    '台州': [121.1353,28.6688],
-    '合肥': [117.29,32.0581],
-    '呼和浩特': [111.4124,40.4901],
-    '咸阳': [108.4131,34.8706],
-    '哈尔滨': [127.9688,45.368],
-    '唐山': [118.4766,39.6826],
-    '嘉兴': [120.9155,30.6354],
-    '大同': [113.7854,39.8035],
-    '大连': [122.2229,39.4409],
-    '天津': [117.4219,39.4189],
-    '太原': [112.3352,37.9413],
-    '威海': [121.9482,37.1393],
-    '宁波': [121.5967,29.6466],
-    '宝鸡': [107.1826,34.3433],
-    '宿迁': [118.5535,33.7775],
-    '常州': [119.4543,31.5582],
-    '广州': [113.5107,23.2196],
-    '廊坊': [116.521,39.0509],
-    '延安': [109.1052,36.4252],
-    '张家口': [115.1477,40.8527],
-    '徐州': [117.5208,34.3268],
-    '德州': [116.6858,37.2107],
-    '惠州': [114.6204,23.1647],
-    '成都': [103.9526,30.7617],
-    '扬州': [119.4653,32.8162],
-    '承德': [117.5757,41.4075],
-    '拉萨': [91.1865,30.1465],
-    '无锡': [120.3442,31.5527],
-    '日照': [119.2786,35.5023],
-    '昆明': [102.9199,25.4663],
-    '杭州': [119.5313,29.8773],
-    '枣庄': [117.323,34.8926],
-    '柳州': [109.3799,24.9774],
-    '株洲': [113.5327,27.0319],
-    '武汉': [114.3896,30.6628],
-    '汕头': [117.1692,23.3405],
-    '江门': [112.6318,22.1484],
-    '沈阳': [123.1238,42.1216],
-    '沧州': [116.8286,38.2104],
-    '河源': [114.917,23.9722],
-    '泉州': [118.3228,25.1147],
-    '泰安': [117.0264,36.0516],
-    '泰州': [120.0586,32.5525],
-    '济南': [117.1582,36.8701],
-    '济宁': [116.8286,35.3375],
-    '海口': [110.3893,19.8516],
-    '淄博': [118.0371,36.6064],
-    '淮安': [118.927,33.4039],
-    '深圳': [114.5435,22.5439],
-    '清远': [112.9175,24.3292],
-    '温州': [120.498,27.8119],
-    '渭南': [109.7864,35.0299],
-    '湖州': [119.8608,30.7782],
-    '湘潭': [112.5439,27.7075],
-    '滨州': [117.8174,37.4963],
-    '潍坊': [119.0918,36.524],
-    '烟台': [120.7397,37.5128],
-    '玉溪': [101.9312,23.8898],
-    '珠海': [113.7305,22.1155],
-    '盐城': [120.2234,33.5577],
-    '盘锦': [121.9482,41.0449],
-    '石家庄': [114.4995,38.1006],
-    '福州': [119.4543,25.9222],
-    '秦皇岛': [119.2126,40.0232],
-    '绍兴': [120.564,29.7565],
-    '聊城': [115.9167,36.4032],
-    '肇庆': [112.1265,23.5822],
-    '舟山': [122.2559,30.2234],
-    '苏州': [120.6519,31.3989],
-    '莱芜': [117.6526,36.2714],
-    '菏泽': [115.6201,35.2057],
-    '营口': [122.4316,40.4297],
-    '葫芦岛': [120.1575,40.578],
-    '衡水': [115.8838,37.7161],
-    '衢州': [118.6853,28.8666],
-    '西宁': [101.4038,36.8207],
-    '西安': [109.1162,34.2004],
-    '贵阳': [106.6992,26.7682],
-    '连云港': [119.1248,34.552],
-    '邢台': [114.8071,37.2821],
-    '邯郸': [114.4775,36.535],
-    '郑州': [113.4668,34.6234],
-    '鄂尔多斯': [108.9734,39.2487],
-    '重庆': [107.7539,30.1904],
-    '金华': [120.0037,29.1028],
-    '铜川': [109.0393,35.1947],
-    '银川': [106.3586,38.1775],
-    '镇江': [119.4763,31.9702],
-    '长春': [125.8154,44.2584],
-    '长沙': [113.0823,28.2568],
-    '长治': [112.8625,36.4746],
-    '阳泉': [113.4778,38.0951],
-    '青岛': [120.4651,36.3373],
-    '韶关': [113.7964,24.7028]
-};
 
-var BJData = [
-    [{name:'北京'}, {name:'上海',value:95}],
-    [{name:'北京'}, {name:'广州',value:90}],
-    [{name:'北京'}, {name:'大连',value:80}],
-    [{name:'北京'}, {name:'南宁',value:70}],
-    [{name:'北京'}, {name:'南昌',value:60}],
-    [{name:'北京'}, {name:'拉萨',value:50}],
-    [{name:'北京'}, {name:'长春',value:40}],
-    [{name:'北京'}, {name:'包头',value:30}],
-    [{name:'北京'}, {name:'重庆',value:20}],
-    [{name:'北京'}, {name:'常州',value:10}]
-];
 
-var SHData = [
-    [{name:'上海'},{name:'包头',value:95}],
-    [{name:'上海'},{name:'昆明',value:90}],
-    [{name:'上海'},{name:'广州',value:80}],
-    [{name:'上海'},{name:'郑州',value:70}],
-    [{name:'上海'},{name:'长春',value:60}],
-    [{name:'上海'},{name:'重庆',value:50}],
-    [{name:'上海'},{name:'长沙',value:40}],
-    [{name:'上海'},{name:'北京',value:30}],
-    [{name:'上海'},{name:'丹东',value:20}],
-    [{name:'上海'},{name:'大连',value:10}]
-];
+var data = parse_data.loading_state(test_data.taxi_id);
 
-var GZData = [
-    [{name:'广州'},{name:'福州',value:95}],
-    [{name:'广州'},{name:'太原',value:90}],
-    [{name:'广州'},{name:'长春',value:80}],
-    [{name:'广州'},{name:'重庆',value:70}],
-    [{name:'广州'},{name:'西安',value:60}],
-    [{name:'广州'},{name:'成都',value:50}],
-    [{name:'广州'},{name:'常州',value:40}],
-    [{name:'广州'},{name:'北京',value:30}],
-    [{name:'广州'},{name:'北海',value:20}],
-    [{name:'广州'},{name:'海口',value:10}]
-];
-
-var submit = function(begin,end){
-    if(mapChart && option){
-        var series = [];
-        series.push({
-            name: 'baseline',
-            type: 'lines',
-            zlevel: 1,
-            effect: {
-                show: true,
-                period: 6,
-                traillength:0.7,
-                color: '#fff',
-                symbolSize: 3
-            },
-            lineStyle: {
-                normal: {
-                    color: '#a6c84c',
-                    width: 0,
-                    curveness: 0.2
-                }
-            },
-            data: navigation(begin,end,geoCoordMap),
+var chart1 = echarts.init(document.getElementById('map-wrap'));
+chart1.setOption({
+    legend: {
+        data:['需求','空缺']
+    },
+    xAxis:{
+        type:'category',
+        data:['12a', '1a', '2a', '3a', '4a', '5a', '6a','7a', '8a', '9a','10a','11a','12p', '1p', '2p', '3p', '4p', '5p','6p', '7p', '8p', '9p', '10p', '11p'],
+        // splitArea:{show:true}
+    },
+    yAxis:{
+        type:'value'
+    },
+    series: [
+        {
+            name: '需求',
+            type: 'bar',
+            stack: 'one',
+            data: data.require
         },
         {
-            name: 'activeline',
+            name: '空缺',
+            type: 'bar',
+            stack: 'one',
+            data: data.remain
+        },
+    ]
+});
+
+var chart2 = echarts.init(document.getElementById('path-info'));
+
+var hsj = parse_data.direction(direction_data.taxi_id);
+var legend = [];
+for(var direction_index = 2; direction_index < 360; direction_index += 2){
+    legend.push(direction_index + '度');
+}
+chart2.setOption({
+    legend:{
+        selectedMode: 'single',
+        data:['0H','1H','2H','3H','4H','5H','6H','7H','8H','9H','10H','11H','12H','13H','14H','15H','16H','17H','18H','19H','20H','21H','22H','23H']
+        // data:legend       
+    },
+    series:hsj
+});
+
+var location_chart = echarts.init(document.getElementById('location_chart'));
+$.get('../data/武汉市.json',function(wuhan){
+    echarts.registerMap('wuhan',wuhan);
+    location_chart.setOption({
+        geo:{
+            map: 'wuhan'
+        },
+    });    
+});
+
+location_chart.showLoading();
+
+$.get('../data/taxi_location.json',function(location_data){
+    location_chart.hideLoading();
+    location_chart.setOption({
+        geo:{
+            map: 'wuhan',
+            roam: true
+        },
+        series:{
             type: 'lines',
-            zlevel: 2,
-            symbol: ['none','arrow'],
-            symbolSize: 10,
-            effect: {
-                show: true,
-                period: 6,
-                traillength: 0,
-                symbol: planePath,
-                symbolSize: 15
-            },
-            lineStyle: {
-                normal: {
-                    color: '#a6c84c',
-                    width: 1,
-                    opacity: 0.6,
-                    curveness: 0.2
-                }
-            },
-            data: navigation(begin,end,geoCoordMap)
-        });
-        option.series = series;
-        // mapChart.setOption(option);
-    }
-};
-
-// var mapChart = echarts.init(document.getElementById('map-wrap'));
-// var option = {};
-mapRender.registerNode(document.getElementById('map-wrap'),echarts);
-$.get('../data/china.json',function(chinaJson){
-    echarts.registerMap('china',chinaJson);
-    // option = {
-    //         backgroundColor: '#404a59',
-    //         title : {
-    //             text: '模拟迁徙',
-    //             subtext: '数据纯属虚构',
-    //             left: 'center',
-    //             textStyle : {
-    //                 color: '#fff'
-    //             }
-    //         },
-    //         geo: {
-    //             map: 'china',
-    //             label: {
-    //                 emphasis: {
-    //                     show: false
-    //                 }
-    //             },
-    //             roam: true,
-    //             itemStyle: {
-    //                 normal: {
-    //                     areaColor: '#323c48',
-    //                     borderColor: '#404a59'
-    //                 },
-    //                 emphasis: {
-    //                     areaColor: '#2a333d'
-    //                 }
-    //             }
-    //         },
-    //     };
-    mapRender.registerOption('china');
+            polyline: true,
+            coordinateSystem: 'geo',
+            large: true,
+            data: parse_data.location(location_data)
+        }
+    });
 });
-
-$('#sb').bind('click',function(){
-    var begin = $('#begin').val();
-    var end = $('#end').val();
-    // submit(begin,end);
-    // mapChart.setOption(option);
-    mapRender.updatePath(navigation(begin,end,geoCoordMap));
-});
-
-var infoChart = echarts.init(document.getElementById('path-info'));
-        // 指定图表的配置项和数据
-var infoOption = {
-    title: {
-        text: 'ECharts 入门示例'
-    },
-    tooltip: {},
-    legend: {
-        data:['销量']
-    },
-    xAxis: {
-        data: ["衬衫","羊毛衫","雪纺衫","裤子","高跟鞋","袜子"]
-    },
-    yAxis: {},
-    series: [{
-        name: '销量',
-        type: 'bar',
-        data: [20, 2, 36, 10, 10, 20]
-    }]
-};
-
-// 使用刚指定的配置项和数据显示图表。
-infoChart.setOption(infoOption);
-
-
-
-
-
